@@ -5,11 +5,28 @@ import (
 	"fmt"
 	"gRPC_project/calculator/calculatorpb"
 	"google.golang.org/grpc"
+	"io"
 	"log"
 	"net"
 )
 
 type server struct{}
+
+func (s server) ComputeAverage(stream calculatorpb.CalculatorService_ComputeAverageServer) error {
+	fmt.Println("ComputeAverage function was invoked with a streaming request")
+	var average int32
+	for {
+		req, err := stream.Recv()
+		if err == io.EOF {
+			return stream.SendAndClose(&calculatorpb.ComputeAverageResponse{Average: float32(average)})
+		}
+		if err != nil {
+			log.Fatalf("Error while reading client stream: %v", err)
+		}
+
+		average = req.GetFirstNum() + req.GetSecondNum()/2
+	}
+}
 
 func (s server) PrimeNumberDecomposition(req *calculatorpb.PrimeNumberDecompositionRequest, stream calculatorpb.CalculatorService_PrimeNumberDecompositionServer) error {
 	fmt.Printf("PrimeNumberDecomposition function was invoked with %v\n", req)
