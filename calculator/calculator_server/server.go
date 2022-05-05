@@ -11,6 +11,23 @@ import (
 
 type server struct{}
 
+func (s server) PrimeNumberDecomposition(req *calculatorpb.PrimeNumberDecompositionRequest, stream calculatorpb.CalculatorService_PrimeNumberDecompositionServer) error {
+	fmt.Printf("PrimeNumberDecomposition function was invoked with %v\n", req)
+	number := req.GetNumber()
+	divisor := int32(2)
+
+	for number > 1 {
+		if number%divisor == 0 {
+			number = number / divisor
+			stream.Send(&calculatorpb.PrimeNumberDecompositionResponse{PrimeNumbers: divisor})
+
+		} else {
+			divisor++
+		}
+	}
+	return nil
+}
+
 func (s server) Sum(ctx context.Context, req *calculatorpb.SumRequest) (*calculatorpb.SumResponse, error) {
 	fmt.Printf("sum function invoked:  %s", req)
 	first_num := req.GetFirstNum()
