@@ -13,7 +13,18 @@ message SumResponse {
   int32 sum_result = 1;
 }
 
+message PrimeNumberDecompositionRequest {
+  int32 number = 1;
+}
+
+message PrimeNumberDecompositionResponse {
+  int32 prime_numbers = 1;
+}
+
 service CalculatorService {
   //unary
   rpc Sum(SumRequest) returns (SumResponse) {} ;
+  // server streaming
+  rpc PrimeNumberDecomposition(PrimeNumberDecompositionRequest) returns (stream PrimeNumberDecompositionResponse) {} ;
 }
+
