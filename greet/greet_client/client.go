@@ -124,7 +124,7 @@ func doBiDiStreaming(cc greetpb.GreetServiceClient) {
 
 	stream, err := cc.GreetEveryone(context.Background())
 	if err != nil {
-		log.Fatalf("")
+		log.Fatalf(" error while creating stream: %v", err)
 	}
 
 	requests := []*greetpb.GreetEveryoneRequest{
