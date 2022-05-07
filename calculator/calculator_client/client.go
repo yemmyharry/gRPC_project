@@ -8,6 +8,7 @@ import (
 	"google.golang.org/grpc/credentials/insecure"
 	"io"
 	"log"
+	"time"
 )
 
 func main() {
@@ -23,7 +24,9 @@ func main() {
 
 	//primeFactor(cc)
 
-	computeAverage(cc)
+	//computeAverage(cc)
+
+	findMaximum(cc)
 }
 
 func sumUnary(cc calculatorpb.CalculatorServiceClient) {
@@ -93,5 +96,62 @@ func computeAverage(cc calculatorpb.CalculatorServiceClient) {
 		log.Fatalf("Error while receiving response from ComputeAverage RPC %v", err)
 	}
 	fmt.Printf("Response from ComputeAverage: %v\n", res.GetAverage())
+
+}
+
+func findMaximum(cc calculatorpb.CalculatorServiceClient) {
+	stream, err := cc.FindMaximum(context.Background())
+	if err != nil {
+		log.Fatalf(" Error while calling FindMaximum RPC %v", err)
+	}
+
+	requests := []*calculatorpb.FindMaximumRequest{
+		&calculatorpb.FindMaximumRequest{
+			Number: 4,
+		},
+		&calculatorpb.FindMaximumRequest{
+			Number: 7,
+		},
+		&calculatorpb.FindMaximumRequest{
+			Number: 2,
+		},
+		&calculatorpb.FindMaximumRequest{
+			Number: 19,
+		},
+		&calculatorpb.FindMaximumRequest{
+			Number: 6,
+		},
+		&calculatorpb.FindMaximumRequest{
+			Number: 32,
+		},
+	}
+
+	waitChan := make(chan struct{})
+
+	go func() {
+		//requests := []int32{4, 7, 2, 19, 4, 6, 32}
+		for _, req := range requests {
+			fmt.Printf("Sending number: %v\n", req)
+			stream.Send(req)
+			time.Sleep(1000 * time.Millisecond)
+		}
+		stream.CloseSend()
+	}()
+
+	go func() {
+		for {
+			recv, err := stream.Recv()
+			if err == io.EOF {
+				break
+			}
+			if err != nil {
+				log.Fatalf("Error while receiving response from FindMaximum RPC %v", err)
+			}
+			fmt.Printf("New Maximum: %v\n", recv.GetResult())
+		}
+		close(waitChan)
+	}()
+
+	<-waitChan
 
 }
