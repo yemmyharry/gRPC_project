@@ -5,12 +5,29 @@ import (
 	"fmt"
 	"gRPC_project/calculator/calculatorpb"
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 	"io"
 	"log"
+	"math"
 	"net"
 )
 
 type server struct{}
+
+func (s server) SquareRoot(ctx context.Context, req *calculatorpb.SquareRootRequest) (*calculatorpb.SquareRootResponse, error) {
+	fmt.Printf("Square root function invoked %v\n", req)
+	number := req.GetNumber()
+	if number < 0 {
+		return nil, status.Errorf(
+			codes.InvalidArgument,
+			fmt.Sprintf("Number %v is less than 0", number),
+		)
+	}
+	result := math.Sqrt(float64(number))
+	res := &calculatorpb.SquareRootResponse{SquareRoot: float32(result)}
+	return res, nil
+}
 
 func (s server) FindMaximum(stream calculatorpb.CalculatorService_FindMaximumServer) error {
 	fmt.Printf(" FindMaximum function was invoked with streaming request \n")
