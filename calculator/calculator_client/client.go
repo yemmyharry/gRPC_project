@@ -5,7 +5,9 @@ import (
 	"fmt"
 	"gRPC_project/calculator/calculatorpb"
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/credentials/insecure"
+	"google.golang.org/grpc/status"
 	"io"
 	"log"
 	"time"
@@ -26,7 +28,11 @@ func main() {
 
 	//computeAverage(cc)
 
-	findMaximum(cc)
+	//findMaximum(cc)
+
+	squareRoot(cc, 2)
+	squareRoot(cc, -2)
+
 }
 
 func sumUnary(cc calculatorpb.CalculatorServiceClient) {
@@ -153,5 +159,28 @@ func findMaximum(cc calculatorpb.CalculatorServiceClient) {
 	}()
 
 	<-waitChan
+
+}
+
+func squareRoot(cc calculatorpb.CalculatorServiceClient, x int32) {
+	//num := int32(4)
+	num := x
+	req := &calculatorpb.SquareRootRequest{Number: num}
+
+	res, err := cc.SquareRoot(context.Background(), req)
+	if err != nil {
+		stat, ok := status.FromError(err)
+		if ok {
+			fmt.Println(stat.Message())
+			fmt.Println(stat.Code())
+			if stat.Code() == codes.InvalidArgument {
+				fmt.Println("We probably sent a negative number")
+			} else {
+				log.Fatalf("Error while calling SquareRoot RPC %v", err)
+			}
+		}
+	}
+	fmt.Printf("The square root of %v is %v", num, res.GetSquareRoot())
+	res.GetSquareRoot()
 
 }
