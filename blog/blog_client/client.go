@@ -20,7 +20,8 @@ func main() {
 	defer dial.Close()
 	//createBlog(client)
 	//readBlog(client)
-	updateBlog(client)
+	//updateBlog(client)
+	deleteBlog(client)
 }
 
 func createBlog(c blogpb.BlogServiceClient) {
@@ -78,4 +79,17 @@ func updateBlog(c blogpb.BlogServiceClient) {
 	}
 
 	log.Printf("Blog updated: %v", blog)
+}
+
+func deleteBlog(c blogpb.BlogServiceClient) {
+	req := &blogpb.DeleteBlogRequest{
+		BlogId: "6277f510e2089b0b49331f1f",
+	}
+	res, err := c.DeleteBlog(context.Background(), req)
+	if err != nil {
+		log.Fatalf("Unexpected error: %v", err)
+	}
+
+	log.Printf("Blog deleted: %v", res)
+
 }
