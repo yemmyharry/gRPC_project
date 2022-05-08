@@ -5,14 +5,32 @@ import (
 	"fmt"
 	"gRPC_project/greet/greetpb"
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/credentials"
 	"google.golang.org/grpc/credentials/insecure"
+	"google.golang.org/grpc/status"
 	"io"
 	"log"
 	"time"
 )
 
 func main() {
-	conn, err := grpc.Dial("localhost:50051", grpc.WithTransportCredentials(insecure.NewCredentials()))
+
+	opts := grpc.WithTransportCredentials(insecure.NewCredentials())
+	tls := true
+
+	if tls {
+
+		certFile := "ssl/ca.crt"
+		creds, err := credentials.NewClientTLSFromFile(certFile, "")
+		if err != nil {
+			log.Fatalf("Failed to load ca trust certificate %v", err)
+			return
+		}
+		opts = grpc.WithTransportCredentials(creds)
+	}
+
+	conn, err := grpc.Dial("localhost:50051", opts)
 	if err != nil {
 		log.Fatalf("did not connect: %v", err)
 	}
@@ -22,13 +40,16 @@ func main() {
 	c := greetpb.NewGreetServiceClient(conn)
 	//fmt.Printf("Created client: %f", c)
 
-	//doUnary(c)
+	doUnary(c)
 
 	//doServerStreaming(c)
 
 	//doClientStreaming(c)
 
-	doBiDiStreaming(c)
+	//doBiDiStreaming(c)
+
+	//doUnaryWithDeadline(c, 5*time.Second)
+	//doUnaryWithDeadline(c, 1*time.Second)
 }
 
 func doUnary(cc greetpb.GreetServiceClient) {
@@ -179,4 +200,29 @@ func doBiDiStreaming(cc greetpb.GreetServiceClient) {
 
 	<-waitChan
 
+}
+
+func doUnaryWithDeadline(cc greetpb.GreetServiceClient, timeout time.Duration) {
+	fmt.Println("Starting to do a UnaryWithDeadline RPC...")
+	ctx, cancel := context.WithTimeout(context.Background(), timeout)
+	defer cancel()
+
+	req := &greetpb.GreetWithDeadlineRequest{
+		Greeting: &greetpb.Greeting{FirstName: "Yemi"},
+	}
+	deadline, err := cc.GreetWithDeadline(ctx, req)
+	if err != nil {
+		stat, ok := status.FromError(err)
+		if ok {
+			if stat.Code() == codes.DeadlineExceeded {
+				fmt.Printf("Timeout was hit! Deadline was exceeded\n")
+			} else {
+				fmt.Printf("Unexpected error: %v\n", stat)
+			}
+		} else {
+			log.Fatalf(" error while calling GreetWithDeadline RPC: %v", err)
+		}
+		return
+	}
+	fmt.Printf("Response: %v\n", deadline.GetResult())
 }
