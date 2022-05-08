@@ -2,11 +2,13 @@ package main
 
 import (
 	"context"
+	"fmt"
 	"gRPC_project/blog/blogpb"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/credentials/insecure"
 	"google.golang.org/grpc/status"
+	"io"
 	"log"
 )
 
@@ -21,7 +23,8 @@ func main() {
 	//createBlog(client)
 	//readBlog(client)
 	//updateBlog(client)
-	deleteBlog(client)
+	//deleteBlog(client)
+	listBlog(client)
 }
 
 func createBlog(c blogpb.BlogServiceClient) {
@@ -91,5 +94,25 @@ func deleteBlog(c blogpb.BlogServiceClient) {
 	}
 
 	log.Printf("Blog deleted: %v", res)
+
+}
+
+func listBlog(c blogpb.BlogServiceClient) {
+	req := &blogpb.ListBlogsRequest{}
+	blogs, err := c.ListBlogs(context.Background(), req)
+	if err != nil {
+		log.Fatalf("Unexpected error: %v", err)
+	}
+
+	for {
+		recv, err := blogs.Recv()
+		if err == io.EOF {
+			break
+		}
+		if err != nil {
+			log.Fatalf("Unexpected error: %v", err)
+		}
+		fmt.Printf("Blog list: %v \n", recv.GetBlogs())
+	}
 
 }
