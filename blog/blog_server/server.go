@@ -9,6 +9,7 @@ import (
 	"go.mongodb.org/mongo-driver/mongo/options"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/reflection"
 	"google.golang.org/grpc/status"
 	"log"
 	"net"
@@ -18,13 +19,39 @@ import (
 
 var collection *mongo.Collection
 
-type server struct{}
-
 type blogItem struct {
-	ID       primitive.ObjectID `bson:"_id;omitempty"`
+	ID       primitive.ObjectID `bson:"_id,omitempty"`
 	AuthorID string             `bson:"author_id"`
 	Content  string             `bson:"content"`
 	Title    string             `bson:"title"`
+}
+
+type server struct{}
+
+func (s server) ReadBlog(ctx context.Context, req *blogpb.ReadBlogRequest) (*blogpb.ReadBlogResponse, error) {
+	fmt.Println("ReadBlog request")
+
+	id := req.GetId()
+	oid, err := primitive.ObjectIDFromHex(id)
+	if err != nil {
+		return nil, status.Errorf(codes.InvalidArgument, fmt.Sprintf("Cannot parse ID"))
+	}
+	data := &blogItem{}
+	filter := primitive.M{"_id": oid}
+	res := collection.FindOne(context.Background(), filter)
+	if err := res.Decode(data); err != nil {
+		return nil, status.Errorf(codes.NotFound, fmt.Sprintf("Cannot find blog with specified ID: %v", err))
+	}
+
+	return &blogpb.ReadBlogResponse{
+		Blog: &blogpb.Blog{
+			Id:       data.ID.Hex(),
+			AuthorId: data.AuthorID,
+			Content:  data.Content,
+			Title:    data.Title,
+		},
+	}, nil
+
 }
 
 func (s server) CreateBlog(ctx context.Context, req *blogpb.CreateBlogRequest) (*blogpb.CreateBlogResponse, error) {
@@ -85,6 +112,7 @@ func main() {
 
 	s := grpc.NewServer()
 	blogpb.RegisterBlogServiceServer(s, &server{})
+	reflection.Register(s)
 
 	go func() {
 		fmt.Println("Starting server...")
