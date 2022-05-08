@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"gRPC_project/blog/blogpb"
+	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
@@ -27,6 +28,38 @@ type blogItem struct {
 }
 
 type server struct{}
+
+func (s server) ListBlogs(req *blogpb.ListBlogsRequest, stream blogpb.BlogService_ListBlogsServer) error {
+	fmt.Println("ListBlogs request")
+
+	//find all blogs
+	cur, err := collection.Find(context.Background(), bson.D{{}})
+	if err != nil {
+		return status.Errorf(codes.Internal, fmt.Sprintf("failed to get blogs: %v", err))
+	}
+
+	defer cur.Close(context.Background())
+	for cur.Next(context.Background()) {
+		data := &blogItem{}
+		err := cur.Decode(&data)
+		if err != nil {
+			return status.Errorf(codes.Internal, fmt.Sprintf("Error decoding stream: %v", err))
+		}
+		res := &blogpb.ListBlogsResponse{
+			Blogs: &blogpb.Blog{
+				Id:       data.ID.Hex(),
+				AuthorId: data.AuthorID,
+				Content:  data.Content,
+				Title:    data.Title,
+			},
+		}
+		stream.Send(res)
+	}
+	if err := cur.Err(); err != nil {
+		return status.Errorf(codes.Internal, fmt.Sprintf("Unknown internal error: %v", err))
+	}
+	return nil
+}
 
 func (s server) DeleteBlog(ctx context.Context, req *blogpb.DeleteBlogRequest) (*blogpb.DeleteBlogResponse, error) {
 	fmt.Println("Delete blog request")
