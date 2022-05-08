@@ -18,7 +18,8 @@ func main() {
 
 	client := blogpb.NewBlogServiceClient(dial)
 	defer dial.Close()
-	createBlog(client)
+	//createBlog(client)
+	readBlog(client)
 
 }
 
@@ -45,5 +46,19 @@ func createBlog(c blogpb.BlogServiceClient) {
 	}
 
 	log.Printf("Blog created: %v", blog)
+
+}
+
+func readBlog(c blogpb.BlogServiceClient) {
+	req := &blogpb.ReadBlogRequest{
+		Id: "6277e28a18eb6a73db18a892",
+	}
+
+	blog, err := c.ReadBlog(context.Background(), req)
+	if err != nil {
+		log.Fatalf("Unexpected error: %v", err)
+	}
+
+	log.Printf("Blog read: %v", blog)
 
 }
