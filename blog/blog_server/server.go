@@ -28,6 +28,30 @@ type blogItem struct {
 
 type server struct{}
 
+func (s server) DeleteBlog(ctx context.Context, req *blogpb.DeleteBlogRequest) (*blogpb.DeleteBlogResponse, error) {
+	fmt.Println("Delete blog request")
+	id := req.GetBlogId()
+	oid, err := primitive.ObjectIDFromHex(id)
+	if err != nil {
+		return nil, status.Errorf(codes.InvalidArgument, fmt.Sprintf("Cannot parse ID"))
+	}
+
+	filter := primitive.M{"_id": oid}
+	one, err := collection.DeleteOne(context.Background(), filter)
+	if err != nil {
+		return nil, status.Errorf(codes.Internal, fmt.Sprintf("Cannot delete object in MongoDB: %v", err))
+	}
+
+	if one.DeletedCount == 0 {
+		return nil, status.Errorf(codes.NotFound, fmt.Sprintf("Cannot find blog with ID: %v", id))
+	}
+
+	return &blogpb.DeleteBlogResponse{
+		BlogId: id,
+	}, nil // return nil if no error
+
+}
+
 func (s server) UpdateBlog(ctx context.Context, req *blogpb.UpdateBlogRequest) (*blogpb.UpdateBlogResponse, error) {
 	fmt.Println(" UpdateBlog request")
 	blog := req.GetBlog()
