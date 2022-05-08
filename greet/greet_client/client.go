@@ -20,7 +20,6 @@ func main() {
 	tls := true
 
 	if tls {
-
 		certFile := "ssl/ca.crt"
 		creds, err := credentials.NewClientTLSFromFile(certFile, "")
 		if err != nil {
