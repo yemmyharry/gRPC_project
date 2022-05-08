@@ -25,3 +25,7 @@ blog_server:
 
 blog_client:
 	go run blog/blog_client/client.go
+
+
+format:
+	go fmt ./...
