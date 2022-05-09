@@ -3,6 +3,8 @@ syntax = "proto3";
 package blog;
 
 option go_package = "blog/blogpb";
+import "google/api/annotations.proto";
+
 
 message Blog {
   string id = 1;
@@ -52,8 +54,17 @@ message ListBlogsResponse {
 }
 
 service BlogService {
-  rpc CreateBlog(CreateBlogRequest) returns (CreateBlogResponse) {}
-  rpc ReadBlog(ReadBlogRequest) returns (ReadBlogResponse) {}
+  rpc CreateBlog(CreateBlogRequest) returns (CreateBlogResponse) {
+    option (google.api.http) = {
+      post: "/create"
+      body: "*"
+    };
+  }
+  rpc ReadBlog(ReadBlogRequest) returns (ReadBlogResponse) {
+    option (google.api.http) = {
+      get: "/read/{id}"
+  };
+  }
   rpc UpdateBlog(UpdateBlogRequest) returns (UpdateBlogResponse) {} ;
   rpc DeleteBlog(DeleteBlogRequest) returns (DeleteBlogResponse) {} ;
   rpc ListBlogs(ListBlogsRequest) returns (stream ListBlogsResponse) {} ;
