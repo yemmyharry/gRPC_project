@@ -4,6 +4,8 @@ package calculator;
 
 option go_package = "./calculator/calculatorpb" ;
 
+import "google/api/annotations.proto";
+
 message SumRequest {
   int32 first_num = 1;
   int32 second_num = 2;
@@ -48,14 +50,39 @@ message SquareRootResponse {
 
 service CalculatorService {
   //unary
-  rpc Sum(SumRequest) returns (SumResponse) {} ;
+  rpc Sum(SumRequest) returns (SumResponse) {
+    option (google.api.http) = {
+      post: "/sum"
+      body: "*"
+  } ;
+  }
   // server streaming
-  rpc PrimeNumberDecomposition(PrimeNumberDecompositionRequest) returns (stream PrimeNumberDecompositionResponse) {} ;
+  rpc PrimeNumberDecomposition(PrimeNumberDecompositionRequest) returns (stream PrimeNumberDecompositionResponse) {
+    option (google.api.http) = {
+      post: "/prime_number_decomposition"
+      body: "*"
+    };
+  } ;
   // client streaming
-  rpc ComputeAverage(stream ComputeAverageRequest) returns (ComputeAverageResponse) {} ;
+  rpc ComputeAverage(stream ComputeAverageRequest) returns (ComputeAverageResponse) {
+    option (google.api.http) = {
+      post: "/compute_average"
+      body: "*"
+    };
+  } ;
   // bi-directional streaming
-  rpc FindMaximum(stream FindMaximumRequest) returns (stream FindMaximumResponse) {} ;
+  rpc FindMaximum(stream FindMaximumRequest) returns (stream FindMaximumResponse) {
+    option (google.api.http) = {
+      post: "/find_maximum"
+      body: "*"
+    };
+  } ;
   //unary
-  rpc SquareRoot(SquareRootRequest) returns (SquareRootResponse) {} ;
+  rpc SquareRoot(SquareRootRequest) returns (SquareRootResponse) {
+    option (google.api.http) = {
+      post: "/square_root"
+      body: "*"
+    };
+  } ;
 }
 
