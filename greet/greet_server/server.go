@@ -4,13 +4,16 @@ import (
 	"context"
 	"fmt"
 	"gRPC_project/greet/greetpb"
+	"github.com/grpc-ecosystem/grpc-gateway/v2/runtime"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/credentials"
+	"google.golang.org/grpc/reflection"
 	"google.golang.org/grpc/status"
 	"io"
 	"log"
 	"net"
+	"net/http"
 	"strconv"
 	"time"
 )
@@ -98,13 +101,22 @@ func (s server) Greet(ctx context.Context, req *greetpb.GreetRequest) (*greetpb.
 }
 
 func main() {
+
+	go func() {
+
+		mux := runtime.NewServeMux()
+		greetpb.RegisterGreetServiceHandlerServer(context.Background(), mux, &server{})
+
+		log.Fatalln(http.ListenAndServe("localhost:8080", mux))
+	}()
+
 	listener, err := net.Listen("tcp", "0.0.0.0:50051")
 	if err != nil {
 		log.Fatalf("failed to listen: %v", err)
 	}
 
 	opts := []grpc.ServerOption{}
-	tls := true
+	tls := false
 	if tls {
 		certFile := "ssl/server.crt"
 		keyFile := "ssl/server.pem"
@@ -118,6 +130,7 @@ func main() {
 
 	s := grpc.NewServer(opts...)
 	greetpb.RegisterGreetServiceServer(s, &server{})
+	reflection.Register(s)
 
 	if err := s.Serve(listener); err != nil {
 		log.Fatalf("failed to serve: %v", err)

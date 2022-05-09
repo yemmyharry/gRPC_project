@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"gRPC_project/blog/blogpb"
+	"github.com/grpc-ecosystem/grpc-gateway/v2/runtime"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
@@ -14,8 +15,10 @@ import (
 	"google.golang.org/grpc/status"
 	"log"
 	"net"
+	"net/http"
 	"os"
 	"os/signal"
+	"sync"
 )
 
 var collection *mongo.Collection
@@ -201,6 +204,16 @@ func main() {
 	collection = client.Database("my_blog").Collection("blog")
 
 	fmt.Println("Blog Server Started")
+	var wg sync.WaitGroup
+	go func() {
+		wg.Add(1)
+		defer wg.Done()
+		fmt.Println("starting http server at :8081")
+		mux := runtime.NewServeMux()
+		blogpb.RegisterBlogServiceHandlerServer(context.Background(), mux, server{})
+		log.Fatalln(http.ListenAndServe("localhost:8081", mux))
+	}()
+	wg.Wait()
 
 	lis, err := net.Listen("tcp", "0.0.0.0:50051")
 	if err != nil {

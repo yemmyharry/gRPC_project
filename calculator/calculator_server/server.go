@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"gRPC_project/calculator/calculatorpb"
+	"github.com/grpc-ecosystem/grpc-gateway/v2/runtime"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/reflection"
@@ -12,6 +13,7 @@ import (
 	"log"
 	"math"
 	"net"
+	"net/http"
 )
 
 type server struct{}
@@ -101,6 +103,12 @@ func (s server) Sum(ctx context.Context, req *calculatorpb.SumRequest) (*calcula
 }
 
 func main() {
+
+	go func() {
+		mux := runtime.NewServeMux()
+		calculatorpb.RegisterCalculatorServiceHandlerServer(context.Background(), mux, server{})
+		log.Fatalln(http.ListenAndServe(":8080", mux))
+	}()
 
 	lis, err := net.Listen("tcp", "0.0.0.0:50051")
 	if err != nil {
