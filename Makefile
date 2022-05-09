@@ -29,3 +29,20 @@ blog_client:
 
 format:
 	go fmt ./...
+
+annotations:
+	mkdir -p google/api
+	curl https://raw.githubusercontent.com/googleapis/googleapis/master/google/api/annotations.proto > google/api/annotations.proto
+	curl https://raw.githubusercontent.com/googleapis/googleapis/master/google/api/http.proto > google/api/http.proto
+
+greet_rest:
+	protoc greet/greetpb/greet.proto --grpc-gateway_out=.
+
+calculator_rest:
+	protoc calculator/calculatorpb/calculator.proto --grpc-gateway_out=.
+
+blog_rest:
+	protoc blog/blogpb/blog.proto --grpc-gateway_out=.
+
+evan:
+	evans -p 50051 -r
