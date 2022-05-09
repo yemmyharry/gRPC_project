@@ -1,0 +1,8 @@
+POST http://localhost:8080/square_root
+Content-Type: application/json
+
+{
+"number": "2"
+}
+
+
