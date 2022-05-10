@@ -46,3 +46,10 @@ blog_rest:
 
 evan:
 	evans -p 50051 -r
+
+clean:
+	rm -rf greet/greetpb/*.pb.go
+	rm -rf greet/greetpb/*.pb.gw.go
+
+greet_gen:
+	cd greet; buf generate
