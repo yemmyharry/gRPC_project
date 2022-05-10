@@ -24,10 +24,10 @@ import (
 var collection *mongo.Collection
 
 type blogItem struct {
-	ID       primitive.ObjectID `bson:"_id,omitempty"`
-	AuthorID string             `bson:"author_id"`
-	Content  string             `bson:"content"`
-	Title    string             `bson:"title"`
+	ID       primitive.ObjectID `bson:"_id,omitempty" json:"id"`
+	AuthorID string             `bson:"author_id" json:"author_id"`
+	Content  string             `bson:"content" json:"content"`
+	Title    string             `bson:"title" json:"title"`
 }
 
 type server struct{}
@@ -158,10 +158,10 @@ func (s server) CreateBlog(ctx context.Context, req *blogpb.CreateBlogRequest) (
 	fmt.Println("CreateBlog request")
 	blog := req.GetBlog()
 
-	data := blogItem{
-		AuthorID: blog.AuthorId,
-		Content:  blog.Content,
-		Title:    blog.Title,
+	data := &blogItem{
+		AuthorID: blog.GetAuthorId(),
+		Title:    blog.GetTitle(),
+		Content:  blog.GetContent(),
 	}
 
 	res, err := collection.InsertOne(context.Background(), data)
